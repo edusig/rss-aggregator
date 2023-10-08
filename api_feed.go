@@ -8,9 +8,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func (cfg *apiConfig) userCreateHandler(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) createFeedHandler(w http.ResponseWriter, r *http.Request, user database.User) {
 	type parameters struct {
 		Name string `json:"name"`
+		Url  string `json:"url"`
 	}
 
 	params, err := decodeJsonBody(r.Body, parameters{})
@@ -19,25 +20,24 @@ func (cfg *apiConfig) userCreateHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	userId, err := uuid.NewRandom()
+	newUUID, err := uuid.NewRandom()
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't generate an user id")
+		respondWithError(w, http.StatusInternalServerError, "Couldn't generate an feed id")
 		return
 	}
 
-	user, err := cfg.DB.CreateUser(r.Context(), database.CreateUserParams{
-		ID:        userId,
+	feed, err := cfg.DB.CreateFeed(r.Context(), database.CreateFeedParams{
+		ID:        newUUID,
 		Name:      params.Name,
+		Url:       params.Url,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+		UserID:    user.ID,
 	})
 
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create user")
 	}
-	respondWithJson(w, http.StatusCreated, dbUserToUser(user))
-}
 
-func (cfg *apiConfig) userGetHandler(w http.ResponseWriter, r *http.Request, user database.User) {
-	respondWithJson(w, http.StatusCreated, dbUserToUser(user))
+	respondWithJson(w, http.StatusCreated, dbFeedToFeed(feed))
 }

@@ -8,8 +8,10 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	internal/database v1.0.0
+	internal/auth v1.0.0
+	github.com/google/uuid v1.3.1
 )
 
-require github.com/google/uuid v1.3.1 // indirect
-
 replace internal/database => ./internal/database
+
+replace internal/auth => ./internal/auth
