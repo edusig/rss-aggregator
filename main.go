@@ -1,6 +1,8 @@
 package main
 
 import (
+	"database/sql"
+	"internal/database"
 	"log"
 	"net/http"
 	"os"
@@ -8,21 +10,28 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
-// type apiConfig struct {
-// 	jwtSecret string
-// }
+type apiConfig struct {
+	DB *database.Queries
+}
 
 func main() {
 	godotenv.Load()
 
 	port := os.Getenv("PORT")
-	// jwtSecret := os.Getenv("JST_SECRET")
+	dbConnURL := os.Getenv("DATABASE_CONNECTION_URL")
 
-	// apiCfg := apiConfig{
-	// 	jwtSecret: jwtSecret,
-	// }
+	db, err := sql.Open("postgres", dbConnURL)
+	if err != nil {
+		panic(err)
+	}
+	dbQueries := database.New(db)
+
+	apiCfg := apiConfig{
+		DB: dbQueries,
+	}
 
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
@@ -39,6 +48,7 @@ func main() {
 	apiV1Router := chi.NewRouter()
 	apiV1Router.Get("/readiness", readinessHandler)
 	apiV1Router.Get("/err", errorHandler)
+	apiV1Router.Post("/users", apiCfg.userCreateHandler)
 	r.Mount("/v1", apiV1Router)
 
 	server := http.Server{
