@@ -49,6 +49,7 @@ func main() {
 	apiV1Router.Get("/readiness", readinessHandler)
 	apiV1Router.Get("/err", errorHandler)
 	apiV1Router.Post("/users", apiCfg.userCreateHandler)
+	apiV1Router.Get("/users", apiCfg.userGetHandler)
 	r.Mount("/v1", apiV1Router)
 
 	server := http.Server{

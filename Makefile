@@ -5,6 +5,9 @@ run-build:
 run-docker-db:
 	docker start postgres
 
+run-sql-generate:
+	sqlc generate
+
 create-docker-db:
 	docker run -v ${DOCKER_POSTGRES_DATA}:/var/lib/postgresql/data -d -e POSTGRES_PASSWORD=foobarbin -e POSTGRES_USER=postgres -e PGDATA=/var/lib/postgresql/data -p 9999:5432 --name postgres postgres:15
 
