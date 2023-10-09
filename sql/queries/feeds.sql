@@ -6,5 +6,8 @@ RETURNING *;
 -- name: GetUserFeeds :many
 SELECT * FROM feeds WHERE user_id=$1 LIMIT 100;
 
+-- name: GetFeed :one
+SELECT * FROM feeds WHERE id=$1;
+
 -- name: GetAllFeeds :many
 SELECT * FROM feeds LIMIT 100;

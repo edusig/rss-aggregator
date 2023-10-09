@@ -16,14 +16,14 @@ type Feed struct {
 	UserID    uuid.UUID `json:"user_id"`
 }
 
-func dbFeedToFeed(f database.Feed) Feed {
+func dbFeedToFeed(it database.Feed) Feed {
 	return Feed{
-		ID:        f.ID,
-		Name:      f.Name,
-		Url:       f.Url,
-		CreatedAt: f.CreatedAt,
-		UpdatedAt: f.UpdatedAt,
-		UserID:    f.UserID,
+		ID:        it.ID,
+		Name:      it.Name,
+		Url:       it.Url,
+		CreatedAt: it.CreatedAt,
+		UpdatedAt: it.UpdatedAt,
+		UserID:    it.UserID,
 	}
 }
 
@@ -35,12 +35,31 @@ type User struct {
 	ApiKey    string    `json:"api_key"`
 }
 
-func dbUserToUser(u database.User) User {
+func dbUserToUser(it database.User) User {
 	return User{
-		ID:        u.ID,
-		CreatedAt: u.CreatedAt,
-		UpdatedAt: u.UpdatedAt,
-		Name:      u.Name,
-		ApiKey:    u.ApiKey,
+		ID:        it.ID,
+		CreatedAt: it.CreatedAt,
+		UpdatedAt: it.UpdatedAt,
+		Name:      it.Name,
+		ApiKey:    it.ApiKey,
 	}
+}
+
+type UsersFeed struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	UserID    uuid.UUID
+	FeedID    uuid.UUID
+}
+
+func dbUsersFeedToUsersFeed(it database.UsersFeed) UsersFeed {
+	return UsersFeed{
+		ID:        it.ID,
+		CreatedAt: it.CreatedAt,
+		UpdatedAt: it.UpdatedAt,
+		UserID:    it.UserID,
+		FeedID:    it.FeedID,
+	}
+
 }
