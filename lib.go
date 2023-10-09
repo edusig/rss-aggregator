@@ -40,3 +40,19 @@ func decodeJsonBody[T any](body io.ReadCloser, resp T) (T, error) {
 	}
 	return resp, nil
 }
+
+func SliceMap[T any, E any](slice []T, f func(T) E) []E {
+	newSlice := make([]E, len(slice))
+	for i, v := range slice {
+		newSlice[i] = f(v)
+	}
+	return newSlice
+}
+
+func SliceMapEnumerate[T any, E any](slice []T, f func(T, int) E) []E {
+	newSlice := make([]E, len(slice))
+	for i, v := range slice {
+		newSlice[i] = f(v, i)
+	}
+	return newSlice
+}

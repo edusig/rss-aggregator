@@ -48,8 +48,9 @@ func main() {
 	apiV1Router := chi.NewRouter()
 	apiV1Router.Get("/readiness", readinessHandler)
 	apiV1Router.Get("/err", errorHandler)
-	apiV1Router.Post("/users", apiCfg.userCreateHandler)
 	apiV1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.userGetHandler))
+	apiV1Router.Post("/users", apiCfg.userCreateHandler)
+	apiV1Router.Get("/feeds", apiCfg.getAllFeedsHandler)
 	apiV1Router.Post("/feeds", apiCfg.middlewareAuth(apiCfg.createFeedHandler))
 	r.Mount("/v1", apiV1Router)
 
