@@ -22,3 +22,7 @@ db-reset:
 
 db-status:
 	cd sql/schema && goose postgres postgres://postgres:foobarbin@localhost:9999/rss-aggregator status
+
+build-docker-image:
+	GOOS=linux GOARCH=amd64 go build
+	docker build . -t edusig/rss-aggregator:latest -t edusig/rss-aggregator:${VERSION}

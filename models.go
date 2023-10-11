@@ -8,22 +8,24 @@ import (
 )
 
 type Feed struct {
-	ID        uuid.UUID `json:"uuid"`
-	Name      string    `json:"name"`
-	Url       string    `json:"url"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	UserID    uuid.UUID `json:"user_id"`
+	ID            uuid.UUID  `json:"uuid"`
+	Name          string     `json:"name"`
+	Url           string     `json:"url"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+	UserID        uuid.UUID  `json:"user_id"`
+	LastFetchedAt *time.Time `json:"last_fetched_at"`
 }
 
 func dbFeedToFeed(it database.Feed) Feed {
 	return Feed{
-		ID:        it.ID,
-		Name:      it.Name,
-		Url:       it.Url,
-		CreatedAt: it.CreatedAt,
-		UpdatedAt: it.UpdatedAt,
-		UserID:    it.UserID,
+		ID:            it.ID,
+		Name:          it.Name,
+		Url:           it.Url,
+		CreatedAt:     it.CreatedAt,
+		UpdatedAt:     it.UpdatedAt,
+		UserID:        it.UserID,
+		LastFetchedAt: &it.LastFetchedAt.Time,
 	}
 }
 
@@ -61,5 +63,4 @@ func dbUsersFeedToUsersFeed(it database.UsersFeed) UsersFeed {
 		UserID:    it.UserID,
 		FeedID:    it.FeedID,
 	}
-
 }
