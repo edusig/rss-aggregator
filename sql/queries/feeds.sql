@@ -11,3 +11,9 @@ SELECT * FROM feeds WHERE id=$1;
 
 -- name: GetAllFeeds :many
 SELECT * FROM feeds LIMIT 100;
+
+-- name: GetNextFeedsToFetch :many
+SELECT url, id FROM feeds ORDER BY last_fetched_at NULLS FIRST LIMIT 10;
+
+-- name: MarkFeedFetched :one
+UPDATE feeds SET last_fetched_at=$1, updated_at=NOW() WHERE id=$2 RETURNING *;

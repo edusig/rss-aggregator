@@ -7,6 +7,7 @@ package database
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -103,6 +104,38 @@ func (q *Queries) GetFeed(ctx context.Context, id uuid.UUID) (Feed, error) {
 	return i, err
 }
 
+const getNextFeedsToFetch = `-- name: GetNextFeedsToFetch :many
+SELECT url, id FROM feeds ORDER BY last_fetched_at NULLS FIRST LIMIT 10
+`
+
+type GetNextFeedsToFetchRow struct {
+	Url string
+	ID  uuid.UUID
+}
+
+func (q *Queries) GetNextFeedsToFetch(ctx context.Context) ([]GetNextFeedsToFetchRow, error) {
+	rows, err := q.db.QueryContext(ctx, getNextFeedsToFetch)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetNextFeedsToFetchRow
+	for rows.Next() {
+		var i GetNextFeedsToFetchRow
+		if err := rows.Scan(&i.Url, &i.ID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserFeeds = `-- name: GetUserFeeds :many
 SELECT id, created_at, updated_at, name, url, user_id, last_fetched_at FROM feeds WHERE user_id=$1 LIMIT 100
 `
@@ -136,4 +169,28 @@ func (q *Queries) GetUserFeeds(ctx context.Context, userID uuid.UUID) ([]Feed, e
 		return nil, err
 	}
 	return items, nil
+}
+
+const markFeedFetched = `-- name: MarkFeedFetched :one
+UPDATE feeds SET last_fetched_at=$1, updated_at=NOW() WHERE id=$2 RETURNING id, created_at, updated_at, name, url, user_id, last_fetched_at
+`
+
+type MarkFeedFetchedParams struct {
+	LastFetchedAt sql.NullTime
+	ID            uuid.UUID
+}
+
+func (q *Queries) MarkFeedFetched(ctx context.Context, arg MarkFeedFetchedParams) (Feed, error) {
+	row := q.db.QueryRowContext(ctx, markFeedFetched, arg.LastFetchedAt, arg.ID)
+	var i Feed
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.Url,
+		&i.UserID,
+		&i.LastFetchedAt,
+	)
+	return i, err
 }

@@ -61,6 +61,8 @@ func main() {
 
 	r.Mount("/v1", apiV1Router)
 
+	// go FeedWorker(dbQueries)
+
 	server := http.Server{
 		Addr:    ":" + port,
 		Handler: r,
