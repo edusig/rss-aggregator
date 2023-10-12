@@ -1,13 +1,15 @@
 -- +goose Up
-CREATE TABLE feeds(
+CREATE TABLE posts (
     id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    name VARCHAR(250) NOT NULL,
+    title VARCHAR(400) NOT NULL,
     url VARCHAR(400) NOT NULL UNIQUE,
-    user_id UUID NOT NULL,
-    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    description TEXT,
+    published_at TIMESTAMP WITH TIME ZONE,
+    feed_id UUID NOT NULL,
+    FOREIGN KEY(feed_id) REFERENCES feeds(id) ON DELETE CASCADE
 );
 
 -- +goose Down
-DROP TABLE feeds;
+DROP TABLE posts

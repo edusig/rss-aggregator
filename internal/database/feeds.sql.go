@@ -105,7 +105,11 @@ func (q *Queries) GetFeed(ctx context.Context, id uuid.UUID) (Feed, error) {
 }
 
 const getNextFeedsToFetch = `-- name: GetNextFeedsToFetch :many
-SELECT url, id FROM feeds ORDER BY last_fetched_at NULLS FIRST LIMIT 10
+SELECT url, id
+FROM feeds
+WHERE last_fetched_at IS NULL OR last_fetched_at < (NOW() - INTERVAL '2 hour')
+ORDER BY last_fetched_at NULLS FIRST
+LIMIT 10
 `
 
 type GetNextFeedsToFetchRow struct {

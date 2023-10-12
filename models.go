@@ -64,3 +64,27 @@ func dbUsersFeedToUsersFeed(it database.UsersFeed) UsersFeed {
 		FeedID:    it.FeedID,
 	}
 }
+
+type Post struct {
+	ID          uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Title       string
+	Url         string
+	Description *string
+	PublishedAt *time.Time
+	FeedID      uuid.UUID
+}
+
+func dbPostsToPosts(it database.Post) Post {
+	return Post{
+		ID:          it.ID,
+		CreatedAt:   it.CreatedAt,
+		UpdatedAt:   it.UpdatedAt,
+		Title:       it.Title,
+		Url:         it.Url,
+		Description: &it.Description.String,
+		PublishedAt: &it.PublishedAt.Time,
+		FeedID:      it.FeedID,
+	}
+}

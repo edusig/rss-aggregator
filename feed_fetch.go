@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/xml"
+	"errors"
 	"internal/database"
 	"io"
 	"log"
@@ -14,6 +15,9 @@ import (
 	"github.com/google/uuid"
 )
 
+var ErrMissingPostTitle = errors.New("missing post title")
+var ErrMissingPostUrl = errors.New("missing post url")
+
 func FeedWorker(db *database.Queries) {
 	log.Println("Starting Feed Worker")
 	for {
@@ -22,6 +26,7 @@ func FeedWorker(db *database.Queries) {
 		if err != nil {
 			break
 		}
+		log.Println(rows)
 
 		var wg sync.WaitGroup
 		for _, row := range rows {
@@ -30,14 +35,13 @@ func FeedWorker(db *database.Queries) {
 				defer wg.Done()
 				err := fetchFeed(row.Url, row.ID, db)
 				if err != nil {
-					log.Fatal(err)
-					log.Fatalf("Error while fetching feed from %v", row.Url)
+					log.Fatalf("Error while fetching feed from %v \n%v", row.Url, err)
 				}
 			}(row)
 		}
 		wg.Wait()
 
-		time.Sleep(30 * time.Minute)
+		time.Sleep(1 * time.Minute)
 	}
 }
 
@@ -46,15 +50,56 @@ func fetchFeed(url string, id uuid.UUID, db *database.Queries) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Fetched %v from %v", rss.Channel.Title, url)
 	for _, item := range rss.Channel.Items {
-		log.Printf("Found item %v from %v", *item.Title, rss.Channel.Title)
+		postCreate, err := feedItemToPostCreate(id, item)
+		if err != nil {
+			continue
+		}
+		db.CreatePost(context.TODO(), postCreate)
 	}
 	db.MarkFeedFetched(context.TODO(), database.MarkFeedFetchedParams{
 		LastFetchedAt: sql.NullTime{Time: time.Now(), Valid: true},
 		ID:            id,
 	})
+	log.Printf("Fetched %v from %v", rss.Channel.Title, url)
 	return nil
+}
+
+func feedItemToPostCreate(feedId uuid.UUID, item RSSItem) (database.CreatePostParams, error) {
+	if item.Title == nil {
+		return database.CreatePostParams{}, ErrMissingPostTitle
+	}
+	if item.Link == nil {
+		return database.CreatePostParams{}, ErrMissingPostUrl
+	}
+
+	newUUID, err := uuid.NewRandom()
+	if err != nil {
+		return database.CreatePostParams{}, err
+	}
+
+	description := sql.NullString{String: "", Valid: false}
+	if item.Description != nil {
+		description = sql.NullString{String: *item.Description, Valid: true}
+	}
+	pubDate := sql.NullTime{Time: time.Time{}, Valid: false}
+	if item.PubDate != nil {
+		parsed, err := time.Parse(time.RFC822, *item.PubDate)
+		if err == nil {
+			pubDate = sql.NullTime{Time: parsed, Valid: true}
+		}
+	}
+
+	return database.CreatePostParams{
+		ID:          newUUID,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+		Title:       *item.Title,
+		Url:         *item.Link,
+		Description: description,
+		PublishedAt: pubDate,
+		FeedID:      feedId,
+	}, nil
 }
 
 func fetchRSS(url string) (RSS, error) {
@@ -65,7 +110,7 @@ func fetchRSS(url string) (RSS, error) {
 	body, err := io.ReadAll(resp.Body)
 	resp.Body.Close()
 	if resp.StatusCode > 299 {
-		log.Fatalf("Response failed with status code: %d and\nbody: %s\n", resp.StatusCode, body)
+		log.Fatalf("Response failed with status code: %d and\nbody: %s\n%v\n", resp.StatusCode, body, url)
 	}
 	if err != nil {
 		return RSS{}, err
